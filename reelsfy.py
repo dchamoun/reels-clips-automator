@@ -40,9 +40,10 @@ def generate_segments(response):
         pt = datetime.strptime(end_time,'%H:%M:%S')
         end_time = pt.second + pt.minute*60 + pt.hour*3600
 
+        
         if end_time - start_time < 50:
             end_time += (50 - (end_time - start_time))
-
+        viral_score = segment.get("viral_score", 0)
         output_file = f"output{str(i).zfill(3)}.mp4"
         command = f"ffmpeg -y -hwaccel cuda -i tmp/input_video.mp4 -vf scale='1920:1080' -qscale:v '3' -b:v 6000k -ss {start_time} -to {end_time} tmp/{output_file}"
         subprocess.call(command, shell=True)
@@ -193,13 +194,14 @@ def generate_viral(transcript): # Inspiredby https://github.com/NisaarAgharia/AI
                     "end_time": 00.00,
                     "description": "Description of the text",
                     "duration":00,
+                    "viral_score": 000,
                 },    
             ]
         }
     '''
 
-    prompt = f"Given the following video transcript, analyze each part for potential virality and identify 3 most viral segments from the transcript. Each segment should have nothing less than 50 seconds in duration. The provided transcript is as follows: {transcript}. Based on your analysis, return a JSON document containing the timestamps (start and end), the description of the viral part, and its duration. The JSON document should follow this format: {json_template}. Please replace the placeholder values with the actual results from your analysis."
-    system = f"You are a Viral Segment Identifier, an AI system that analyzes a video's transcript and predict which segments might go viral on social media platforms. You use factors such as emotional impact, humor, unexpected content, and relevance to current trends to make your predictions. You return a structured JSON document detailing the start and end times, the description, and the duration of the potential viral segments."
+    prompt = f"Given the following video transcript, analyze each part for potential virality and identify 3 most viral segments from the transcript. Each segment should have nothing less than 50 seconds in duration. The provided transcript is as follows: {transcript}. Based on your analysis, return a JSON document containing the timestamps (start and end), the description of the viral part, and its duration. The JSON document should follow this format: {json_template}. Please replace the placeholder values with the actual results from your analysis and give a score of virality potential out of 1-100."
+    system = f"You are a Viral Segment Identifier, an AI system that analyzes a video's transcript and predict which segments might go viral on social media platforms. You use factors such as emotional impact, humor, unexpected content, and relevance to current trends to make your predictions. You return a structured JSON document detailing the start and end times, the description, the duration of the potential viral segments and a score of virality potential out of 1-100".
     messages = [
         {"role": "system", "content" : system},
         {"role": "user", "content": prompt}
